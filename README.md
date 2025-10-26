@@ -1,55 +1,175 @@
-# LinkedIn Job Scraper
+# LinkedIn Job Crawler (Selenium → Google Sheets)
 
-## Overview
+![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Selenium](https://img.shields.io/badge/Selenium-Automation-green) ![Google%20Sheets](https://img.shields.io/badge/Google%20Sheets-API-success) ![Status](https://img.shields.io/badge/Status-Active-brightgreen) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-This project scrapes job listings from LinkedIn using Selenium and cookie-based login. It filters jobs by language, detects tags, and extracts structured fields.
+> **Short description:**  
+> Python-based LinkedIn job scraper using Selenium. Filters & dedupes results, skips non-English roles, and exports structured data to Google Sheets with resume-from-progress logging.
 
-## Features
+---
 
-- Uses real LinkedIn session (via cookies)
-- Filters jobs by English language using `langdetect`
-- Tags jobs containing German language mentions
-- Extracts the following fields:
-  - jobURL
-  - title
-  - experienceLevel
-  - company name
-  - applicationCount
-  - postedTime
-  - location
-  - companyURL
-  - remote? (remote, on-site, hybrid)
-  - easyApply? (yes/no)
-  - tag (language)
+## ✨ What this project shows
+- Browser automation with **Selenium** (Chrome, headless) and resilient waits.  
+- **Login flow** with session bootstrapping + optional cookie restore.  
+- **Rate-limit friendly** humanized delays and robust, CSS/XPath-based extraction.  
+- **Language filtering** (skip non-EN) via `langdetect`.  
+- **De-duplication** against existing sheet rows (Title+Company).  
+- **Google Sheets** write-through with service accounts.  
+- **Checkpointing** to `progress.log` so long runs can resume later.
 
-## Filters Supported
+---
 
-| Filter             | Values / Description                               |
-|--------------------|----------------------------------------------------|
-| **Date Posted**     | Any time, Past 24h, Past Week, Past Month          |
-| **Experience Level**| Internship, Entry level, Associate, Mid, Senior, Director|
-| **Job Type**        | Full-time, Part-time, Contract, Temporary          |
-| **Remote**          | On-site, Hybrid, Remote                            |
-| **Location**        | Any country, city, or region                       |
-| **Keyword**         | Free-text (e.g., "CRM", "Salesforce")              |
-| **Easy Apply**      | Whether "Easy Apply" is enabled                    |
+## 🧭 How it works (high level)
+1. **Login** to LinkedIn using Selenium (`setup_driver_with_login()`), optionally headless.  
+2. Build search URLs from flags (role/department/time/remote/location).  
+3. Iterate cards, **skip “viewed”** items, and **language-filter** via `langdetect`.  
+4. Extract fields (title, company, location, apply type, seniority hints, posted time, applicants, etc.).  
+5. **Deduplicate** vs existing sheet rows (Title+Company) and append new rows.  
+6. Persist progress to `progress.log` so you can **resume** later from the right page.
 
-## Setup
+---
 
-1. Install dependencies:
-```
+## 📦 Data fields written to Google Sheets
+`timestamp, job_link, title, company, company_link, location, workplace_type, apply_type, time_posted, applicants, tag, total_employees, process_note, description_note, too_late_flag`
+
+> The sheet is auto-opened by name **“LinkedIn Jobs”** and uses a **Service Account** from `credentials.json`.
+
+---
+
+## 🛠️ Setup
+
+### Prerequisites
+- Python 3.10+  
+- Google Chrome  
+- A Google Cloud **Service Account** with Sheets access (`credentials.json`) shared to your target spreadsheet.
+
+### Install
+```bash
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Log into LinkedIn manually in Chrome.
-3. Export cookies for `linkedin.com` using a browser extension.
-4. Save cookies as `linkedin_cookies.json`.
-
-5. Run script:
-```python
-from scraper import setup_driver_with_cookies
-
-driver = setup_driver_with_cookies("linkedin_cookies.json")
-driver.get("https://www.linkedin.com/jobs/search/?keywords=CRM")
-# Add scraping logic here
+**requirements.txt**
+```txt
+selenium
+webdriver-manager
+oauth2client
+gspread
+pandas
+langdetect
+pytz
+keyboard
 ```
+
+### Configure credentials
+- Place your **`credentials.json`** (Service Account key) next to the scripts.  
+- Ensure there’s a Google Sheet named **LinkedIn Jobs**; share it with the service account email.
+
+### Set LinkedIn login
+Edit `scraper.py` and fill in:
+```python
+EMAIL = "your_email@example.com"
+PASSWORD = "your_password"
+```
+> Headless is enabled by default here:  
+> `options.add_argument("--headless")  # Run browser in background (no UI)`
+
+---
+
+## ▶️ Usage
+
+### Start the crawler
+```bash
+python scrape_jobs.py
+```
+
+You’ll see a simple menu:  
+- **1** — Batch from file *(write progress)*  
+- **2** — Manual run *(no progress file)*  
+- **3** — Batch from file *(apply & resume from progress)*
+
+### Batch file format
+Create `limits_keywords.txt` (one config per line):
+```
+LIMIT|KEYWORDS|pos_flag|dept_flag
+```
+Examples:
+```
+50|crm manager|1|1
+30|salesforce marketing cloud|1|1
+25|growth marketing|0|1
+```
+- `pos_flag` toggles **role filters**; `dept_flag` toggles **department filters**.  
+- The script also sets **LOCATION**, **TIME**, **REMOTE**, etc. inside the file. Tweak those constants if needed.
+
+### Resume logic
+A `progress.log` is kept with records like:  
+`limit|keywords|pos|dept|status|page|updated_at`  
+- `status`: `process` / `done`  
+- `page`: LinkedIn pagination offset (`start=`)
+
+---
+
+### 🧹 Google Sheets integration & workflow
+
+Once job data is exported, the sheet becomes your central workspace for tracking applications.  
+I use built-in **Google Sheets formulas** to automate cleanup and prioritization:
+
+- **Applied check:** a `FILTER` or `COUNTIF` formula flags whether I’ve already applied — matching by *position name* and *company name*.  
+- **Keyword sorting:** each tab filters jobs by topic (e.g. CRM, Growth, Product) using `REGEXMATCH(LOWER(A:A), "keyword")` to instantly surface new roles not yet found in previous runs.  
+- **Status urgency:** jobs posted **less than 1 day ago** are marked with conditional formatting or `IF(REGEXMATCH(C2, "hour|minute"), "🔥 Urgent", "")`.  
+- **Declined / excluded roles:** if I decide to skip a position, I just type `no` or any comment in the *Clean Data* tab — or the URL is auto-filtered out by a separate `FILTER` rule.  
+
+This workflow keeps the dataset continuously updated, actionable, and personalized without manual filtering.
+---
+
+## ⚙️ Configuration tips
+
+Inside `scrape_jobs.py`, adjust these query knobs:  
+- `LOCATION`, `TIME` (e.g., last week), `REMOTE`, `POSITION`, `DEPARTMENT`, `EXPERIENCE`.
+
+Headless on/off:  
+- Keep headless for CI; comment it out to watch the browser locally.
+
+Human-like pacing:  
+- `human_sleep()` randomizes waits to reduce flakiness.
+
+Language filter:  
+- Non-English job descriptions are skipped via `langdetect`.
+
+Deduplication:  
+- Compares `(Title, Company)` against existing rows in your sheet to avoid repeats.
+
+---
+
+## 🗂️ Project structure
+```
+.
+├─ scrape_jobs.py        # main runner: batching, resume, parsing, Sheets I/O
+├─ scraper.py            # driver setup + LinkedIn login (headless Chrome)
+├─ limits_keywords.txt   # batch inputs (LIMIT|KEYWORDS|pos|dept)
+├─ progress.log          # resume checkpoints
+├─ credentials.json      # Google Service Account key
+└─ README.md
+```
+
+---
+
+## 🧪 Portfolio highlights (what reviewers should notice)
+- Robust **DOM targeting** + **explicit waits** for dynamic pages.  
+- **State management** for long scrapes (resume without re-scraping).  
+- **Data hygiene**: language gates, duplicate prevention, structured exports.  
+- Integration with a **third-party API** (Sheets) via service accounts.
+
+---
+
+## 🧭 Roadmap
+- [ ] `.env` support for secrets instead of in-file constants.  
+- [ ] Better error taxonomy & retry policy for transient failures.  
+- [ ] Pluggable exporters (CSV/Parquet/DB).  
+- [ ] Dockerfile + GitHub Actions CI.  
+- [ ] Proxy/rotating UA support.
+
+---
+
+## ⚖️ Legal & ethical note
+This project is **for educational and personal use**. Respect target sites’ **Terms of Service** and robots policies, only scrape data you’re allowed to access, avoid high request rates. You are responsible for your usage.
