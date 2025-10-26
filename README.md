@@ -70,25 +70,6 @@ I use built-in **Google Sheets formulas** to automate cleanup and prioritization
 This workflow is to keep the dataset continuously updated, actionable, and personalized without manual filtering.
 ---
 
-## ⚙️ Configuration tips
-
-Inside `scrape_jobs.py`, adjust these query knobs:  
-- `LOCATION`, `TIME` (e.g., last week), `REMOTE`, `POSITION`, `DEPARTMENT`, `EXPERIENCE`.
-
-Headless on/off:  
-- Keep headless for CI; comment it out to watch the browser locally.
-
-Human-like pacing:  
-- `human_sleep()` randomizes waits to reduce flakiness.
-
-Language filter:  
-- Non-English job descriptions are skipped via `langdetect`.
-
-Deduplication:  
-- Compares `(Title, Company)` against existing rows in your sheet to avoid repeats.
-
----
-
 ## 🗂️ Project structure
 ```
 .
