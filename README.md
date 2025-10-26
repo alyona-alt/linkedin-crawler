@@ -68,6 +68,7 @@ I use built-in **Google Sheets formulas** to automate cleanup and prioritization
 - **Declined / excluded roles:** if I decide to skip a position, I just type `no` or any comment in the *Clean Data* tab — or the URL is auto-filtered out by a separate `FILTER` rule.  
 
 This workflow is to keep the dataset continuously updated, actionable, and personalized without manual filtering.
+
 ---
 
 ## 🗂️ Project structure
