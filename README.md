@@ -26,6 +26,18 @@
 5. **Deduplicate** vs existing sheet rows (Title+Company) and append new rows.  
 6. Persist progress to `progress.log` so you can **resume** later from the right page.
 
+## Filters Supported
+
+| Filter             | Values / Description                               |
+|--------------------|----------------------------------------------------|
+| **Date Posted**     | Any time, Past 24h, Past Week, Past Month          |
+| **Experience Level**| Internship, Entry level, Associate, Mid, Senior, Director|
+| **Job Type**        | Full-time, Part-time, Contract, Temporary          |
+| **Remote**          | On-site, Hybrid, Remote                            |
+| **Location**        | Any country, city, or region                       |
+| **Keyword**         | Free-text (e.g., "CRM", "Salesforce")              |
+| **Easy Apply**      | Whether "Easy Apply" is enabled                    |
+
 ---
 
 ## 🛠️ Setup
@@ -59,7 +71,7 @@ I use built-in **Google Sheets formulas** to automate cleanup and prioritization
 - **Status urgency:** jobs posted **less than 1 day ago** are marked with conditional formatting or `IF(REGEXMATCH(C2, "hour|minute"), "🔥 Urgent", "")`.  
 - **Declined / excluded roles:** if I decide to skip a position, I just type `no` or any comment in the *Clean Data* tab — or the URL is auto-filtered out by a separate `FILTER` rule.  
 
-This workflow keeps the dataset continuously updated, actionable, and personalized without manual filtering.
+This workflow is to keep the dataset continuously updated, actionable, and personalized without manual filtering.
 ---
 
 ## ⚙️ Configuration tips
