@@ -1,6 +1,6 @@
 # LinkedIn Job Crawler (Selenium → Google Sheets)
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Selenium](https://img.shields.io/badge/Selenium-Automation-green) ![Google%20Sheets](https://img.shields.io/badge/Google%20Sheets-API-success) ![Status](https://img.shields.io/badge/Status-Active-brightgreen) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Selenium](https://img.shields.io/badge/Selenium-Automation-green) ![Google%20Sheets](https://img.shields.io/badge/Google%20Sheets-API-success) ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 
 > **Short description:**  
 > Python-based LinkedIn job scraper using Selenium. Filters & dedupes results, skips non-English roles, and exports structured data to Google Sheets with resume-from-progress logging.
@@ -37,81 +37,28 @@
 
 ## 🛠️ Setup
 
-### Prerequisites
-- Python 3.10+  
-- Google Chrome  
-- A Google Cloud **Service Account** with Sheets access (`credentials.json`) shared to your target spreadsheet.
 
-### Install
-```bash
-python -m venv .venv && source .venv/bin/activate
+1. Install dependencies:
+```
 pip install -r requirements.txt
 ```
 
-**requirements.txt**
-```txt
-selenium
-webdriver-manager
-oauth2client
-gspread
-pandas
-langdetect
-pytz
-keyboard
-```
+2. Log into LinkedIn manually in Chrome.
+3. Export cookies for `linkedin.com` using a browser extension.
+4. Save cookies as `linkedin_cookies.json`.
 
-### Configure credentials
-- Place your **`credentials.json`** (Service Account key) next to the scripts.  
-- Ensure there’s a Google Sheet named **LinkedIn Jobs**; share it with the service account email.
-
-### Set LinkedIn login
-Edit `scraper.py` and fill in:
+5. Run script:
 ```python
-EMAIL = "your_email@example.com"
-PASSWORD = "your_password"
-```
-> Headless is enabled by default here:  
-> `options.add_argument("--headless")  # Run browser in background (no UI)`
+from scraper import setup_driver_with_cookies
 
+driver = setup_driver_with_cookies("linkedin_cookies.json")
+driver.get("https://www.linkedin.com/jobs/search/?keywords=CRM")
+# Add scraping logic here
+```
 ---
 
-## ▶️ Usage
-
-### Start the crawler
-```bash
-python scrape_jobs.py
-```
-
-You’ll see a simple menu:  
-- **1** — Batch from file *(write progress)*  
-- **2** — Manual run *(no progress file)*  
-- **3** — Batch from file *(apply & resume from progress)*
-
-### Batch file format
-Create `limits_keywords.txt` (one config per line):
-```
-LIMIT|KEYWORDS|pos_flag|dept_flag
-```
-Examples:
-```
-50|crm manager|1|1
-30|salesforce marketing cloud|1|1
-25|growth marketing|0|1
-```
-- `pos_flag` toggles **role filters**; `dept_flag` toggles **department filters**.  
-- The script also sets **LOCATION**, **TIME**, **REMOTE**, etc. inside the file. Tweak those constants if needed.
-
-### Resume logic
-A `progress.log` is kept with records like:  
-`limit|keywords|pos|dept|status|page|updated_at`  
-- `status`: `process` / `done`  
-- `page`: LinkedIn pagination offset (`start=`)
-
----
-
-### 🧹 Google Sheets integration & workflow
-
-Once job data is exported, the sheet becomes your central workspace for tracking applications.  
+## 🧹 Google Sheets integration logic
+ 
 I use built-in **Google Sheets formulas** to automate cleanup and prioritization:
 
 - **Applied check:** a `FILTER` or `COUNTIF` formula flags whether I’ve already applied — matching by *position name* and *company name*.  
@@ -154,20 +101,11 @@ Deduplication:
 
 ---
 
-## 🧪 Portfolio highlights (what reviewers should notice)
+## 🧪 Portfolio highlights
 - Robust **DOM targeting** + **explicit waits** for dynamic pages.  
 - **State management** for long scrapes (resume without re-scraping).  
 - **Data hygiene**: language gates, duplicate prevention, structured exports.  
 - Integration with a **third-party API** (Sheets) via service accounts.
-
----
-
-## 🧭 Roadmap
-- [ ] `.env` support for secrets instead of in-file constants.  
-- [ ] Better error taxonomy & retry policy for transient failures.  
-- [ ] Pluggable exporters (CSV/Parquet/DB).  
-- [ ] Dockerfile + GitHub Actions CI.  
-- [ ] Proxy/rotating UA support.
 
 ---
 
