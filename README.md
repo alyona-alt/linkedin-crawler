@@ -22,16 +22,9 @@
 1. **Login** to LinkedIn using Selenium (`setup_driver_with_login()`), optionally headless.  
 2. Build search URLs from flags (role/department/time/remote/location).  
 3. Iterate cards, **skip “viewed”** items, and **language-filter** via `langdetect`.  
-4. Extract fields (title, company, location, apply type, seniority hints, posted time, applicants, etc.).  
+4. Extract fields (title, company, location, apply type, seniority hints, posted time, applicants, etc.). Data written to Google Sheets
 5. **Deduplicate** vs existing sheet rows (Title+Company) and append new rows.  
 6. Persist progress to `progress.log` so you can **resume** later from the right page.
-
----
-
-## 📦 Data fields written to Google Sheets
-`timestamp, job_link, title, company, company_link, location, workplace_type, apply_type, time_posted, applicants, tag, total_employees, process_note, description_note, too_late_flag`
-
-> The sheet is auto-opened by name **“LinkedIn Jobs”** and uses a **Service Account** from `credentials.json`.
 
 ---
 
@@ -57,7 +50,7 @@ driver.get("https://www.linkedin.com/jobs/search/?keywords=CRM")
 ```
 ---
 
-## 🧹 Google Sheets integration logic
+## 📦 Google Sheets integration logic
  
 I use built-in **Google Sheets formulas** to automate cleanup and prioritization:
 
