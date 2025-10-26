@@ -54,12 +54,7 @@ pip install -r requirements.txt
 4. Save cookies as `linkedin_cookies.json`.
 
 5. Run script:
-```python
-from scraper import setup_driver_with_cookies
-
-driver = setup_driver_with_cookies("linkedin_cookies.json")
-driver.get("https://www.linkedin.com/jobs/search/?keywords=CRM")
-# Add scraping logic here
+```python scrape_jobs.py
 ```
 ---
 
