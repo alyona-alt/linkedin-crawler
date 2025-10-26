@@ -18,7 +18,7 @@
 
 ---
 
-## 🧭 How it works (high level)
+## 🧭 How it works 
 1. **Login** to LinkedIn using Selenium (`setup_driver_with_login()`), optionally headless.  
 2. Build search URLs from flags (role/department/time/remote/location).  
 3. Iterate cards, **skip “viewed”** items, and **language-filter** via `langdetect`.  
@@ -26,6 +26,7 @@
 5. **Deduplicate** vs existing sheet rows (Title+Company) and append new rows.  
 6. Persist progress to `progress.log` so you can **resume** later from the right page.
 
+---
 ## Filters Supported
 
 | Filter             | Values / Description                               |
