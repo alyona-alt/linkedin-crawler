@@ -54,7 +54,8 @@ pip install -r requirements.txt
 4. Save cookies as `linkedin_cookies.json`.
 
 5. Run script:
-```python scrape_jobs.py
+```
+python scrape_jobs.py
 ```
 ---
 
